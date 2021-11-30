@@ -34,6 +34,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import ca.webber.ftc.helpers.DriveController;
 
 
 /**
@@ -56,6 +59,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor[] motors = new DcMotor[4];
+    private Servo openBucket, tiltBucket;
+    private DcMotor boxArm;
 
     @Override
     public void runOpMode() {
@@ -70,23 +75,31 @@ public class BasicOpMode_Linear extends LinearOpMode {
         motors[2] = hardwareMap.get(DcMotor.class, "backLeft");
         motors[3] = hardwareMap.get(DcMotor.class, "backRight");
 
+        openBucket = hardwareMap.get(Servo.class, "openBucket");
+        tiltBucket = hardwareMap.get(Servo.class, "tiltBucket");
+
+        boxArm = hardwareMap.get(DcMotor.class, "boxArm");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        for (int i = 0; i < 2; i++) motors[i].setDirection(DcMotorSimple.Direction.FORWARD);
-        for (int i = 2; i < 4; i++) motors[i].setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
 
+        DriveController controller = new DriveController(
+                motors[0],
+                motors[1],
+                motors[2],
+                motors[3],
+                openBucket,
+                tiltBucket,
+                boxArm
+        );
+
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            controller.update(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-            for (DcMotor m : motors) m.setPower(0.5);
-
-            // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.update();
         }
     }
 
